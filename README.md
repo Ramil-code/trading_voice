@@ -62,8 +62,8 @@ The template creates the following AWS resources:
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone <https://github.com/Ramil-code/trading_voice>
+   cd <https://github.com/Ramil-code/trading_voice>
    ```
 2. Navigate to the AWS Management Console and upload the `cloudformation-template.yaml` file.
 3. In the CloudFormation console, click **Create Stack** > **With new resources**.
