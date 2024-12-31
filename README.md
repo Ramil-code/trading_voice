@@ -4,6 +4,11 @@ This project sets up a fully functional online radio streaming platform using AW
 
 The setup is designed to be reusable, customizable, and easy to deploy, making it an ideal starting point for building your own internet radio service.
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/1a093c5d-089a-4507-b7f1-03bc41531f9e" alt="aws crypto radio">
+</div>
+
+
 ## **Project Features**
 - **Icecast Streaming Server:** Pre-configured for streaming audio.
 - **Background Music:** Synthesizes dynamic audio (e.g., cryptocurrency quotes).
