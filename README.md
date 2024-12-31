@@ -42,7 +42,7 @@ Before deploying the template, ensure the following:
 
 1. An AWS account with required permissions to create resources.
 2. An existing EC2 KeyPair.
-3. Background music and [Python script](#https://github.com/Ramil-code/trading_voice/blob/main/crypto_quote_radio.py) uploaded to an S3 bucket.
+3. Background music and [Python script](https://github.com/Ramil-code/trading_voice/blob/main/crypto_quote_radio.py) uploaded to an S3 bucket.
 4. AWS CLI installed locally.
 
 ## Parameters
