@@ -97,5 +97,5 @@ Feel free to fork this repository, create feature branches, and submit pull requ
 
 ## Contact
 
-For questions or feedback, contact [[your\5027972@gmail.com](mailto\:rk5027972@gmail.com)].
+For questions or feedback, contact [[rk5027972@gmail.com](mailto:rk5027972@gmail.com)].
 
