@@ -1,0 +1,224 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Setup of EC2 instance, Icecast server, MP3 upload and crypto quotes streaming via Polly.
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: "Name of the S3 bucket"
+    Default: "default_bucket"
+
+  BackgroundTrackName:
+    Type: String
+    Description: "Name of the background music track in S3"
+    Default: "default_track.mp3"
+
+  ScriptFileName:
+    Type: String
+    Description: "Name of the Python script file in S3"
+    Default: "crypto_quote_radio.py"
+
+  IcecastSourcePassword:
+    Type: String
+    Description: "Password for Icecast source connections"
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: "[a-zA-Z0-9]*"
+    ConstraintDescription: "Must contain only alphanumeric characters (min 8)"
+
+  IcecastAdminPassword:
+    Type: String
+    Description: "Password for Icecast admin interface"
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: "[a-zA-Z0-9]*"
+    ConstraintDescription: "Must contain only alphanumeric characters (min 8)"
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "Name of an existing EC2 KeyPair"
+
+  InstanceType:
+    Type: String
+    Description: "EC2 instance type"
+    Default: "t2.micro"
+    AllowedValues:
+      - "t2.micro"
+      - "t2.small"
+      - "t2.medium"
+
+Resources:
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties: {}
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: "MyVPC"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: "MyInternetGateway"
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "MyRouteTable"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: "MySubnet"
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet
+      RouteTableId: !Ref RouteTable
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EC2 instance to allow HTTP, SSH, and Icecast streaming
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: 'ec2.amazonaws.com'
+      Policies:
+        - PolicyName: 'PollyAndS3Policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'polly:SynthesizeSpeech'
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource: '*'
+
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: IAMRole
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: "ami-04a81a99f5ec58529"
+      KeyName: !Ref KeyPairName
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SubnetId: !Ref Subnet
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y icecast2
+
+          sudo apt-get install -y ffmpeg python3 python3-pip unzip curl screen python3-venv
+
+          # Icecast configuration
+          sudo sed -i "s|<hostname>localhost</hostname>|<hostname>$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)</hostname>|" /etc/icecast2/icecast.xml
+          sudo sed -i "s|<source-password>hackme</source-password>|<source-password>${IcecastSourcePassword}</source-password>|" /etc/icecast2/icecast.xml
+          sudo sed -i "s|<admin-password>hackme</admin-password>|<admin-password>${IcecastAdminPassword}</admin-password>|" /etc/icecast2/icecast.xml
+          sudo systemctl start icecast2
+
+          # AWS CLI installation
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+          # Create directory for files
+          mkdir -p /home/ubuntu/radio
+          cd /home/ubuntu/radio
+
+          # Download files from S3
+          aws s3 cp s3://${BucketName}/${BackgroundTrackName} /home/ubuntu/radio/${BackgroundTrackName}
+          aws s3 cp s3://${BucketName}/${ScriptFileName} /home/ubuntu/radio/${ScriptFileName}
+
+          # Python environment setup
+          python3 -m venv /home/ubuntu/radio/myenv
+          source /home/ubuntu/radio/myenv/bin/activate
+          pip install boto3 requests
+
+          # Create playlist
+          echo "file '/home/ubuntu/radio/${BackgroundTrackName}'" > /home/ubuntu/radio/playlist.txt
+          echo "file '/home/ubuntu/crypto_quote.mp3'" >> /home/ubuntu/radio/playlist.txt
+
+          # Start scripts
+          sudo nohup /home/ubuntu/radio/myenv/bin/python3 /home/ubuntu/radio/${ScriptFileName} > /home/ubuntu/radio/crypto_quote.log 2>&1 &
+          sudo nohup ffmpeg -stream_loop -1 -f concat -safe 0 -i /home/ubuntu/radio/playlist.txt -acodec libmp3lame -ab 128k -f mp3 icecast://source:${IcecastSourcePassword}@$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8000/stream > /home/ubuntu/radio/icecast_stream.log 2>&1 &
+
+          # Set appropriate permissions
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/radio
+
+  ElasticIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref EC2Instance
+      EIP: !Ref ElasticIP
+
+Outputs:
+  RadioStreamURL:
+    Value: !Sub "http://${ElasticIP}:8000/stream"
+    Description: "URL for the Icecast radio stream"
+  
+  IcecastAdminURL:
+    Value: !Sub "http://${ElasticIP}:8000/admin/"
+    Description: "URL for the Icecast admin interface"
