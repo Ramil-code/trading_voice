@@ -1,6 +1,6 @@
 # **Crypto Online Radio with Icecast and AWS CloudFormation**
 
-This project sets up a fully functional online radio streaming platform using AWS resources. The radio streams background music combined with real-time cryptocurrency quotes, utilizing services such as EC2, Icecast, AWS S3, and Polly.. 
+This project sets up a fully functional online radio streaming platform using AWS resources. The radio streams background music combined with real-time cryptocurrency quotes, utilizing services such as EC2, Icecast, AWS S3, and Polly.
 
 The setup is designed to be reusable, customizable, and easy to deploy, making it an ideal starting point for building your own internet radio service.
 
