@@ -4,7 +4,6 @@ This project sets up a fully functional online radio streaming platform using AW
 
 The setup is designed to be reusable, customizable, and easy to deploy, making it an ideal starting point for building your own internet radio service.
 
----
 ## **Project Features**
 - **Icecast Streaming Server:** Pre-configured for streaming audio.
 - **Background Music:** Synthesizes dynamic audio (e.g., cryptocurrency quotes).
@@ -13,8 +12,6 @@ The setup is designed to be reusable, customizable, and easy to deploy, making i
 - **AWS Infrastructure:** Launch in minutes using AWS CloudFormation.
 
 
----
-
 ## **Template Features**
 - **Internet Radio with Icecast:** Pre-configured for streaming audio.
 - **Amazon Polly Integration:** Synthesizes dynamic audio (e.g., cryptocurrency quotes).
@@ -22,19 +19,6 @@ The setup is designed to be reusable, customizable, and easy to deploy, making i
 - **Scalable & Secure:** Uses AWS best practices for scalability and IAM security.
 - **Fast Deployment:** Launch in minutes using AWS CloudFormation.
 
----
-# Crypto Online Radio with AWS CloudFormation
-
-## Overview
-
-This project sets up a fully functional online radio streaming platform using AWS resources. The radio streams background music combined with real-time cryptocurrency quotes, utilizing services such as EC2, Icecast, AWS S3, and Polly.
-
-## Features
-
-- **Icecast Streaming Server:** Streams MP3 audio with cryptocurrency quotes.
-- **Background Music:** Hosted on S3 and streamed alongside quotes.
-- **Real-time Crypto Quotes:** Dynamically fetched and converted to audio via AWS Polly.
-- **AWS Infrastructure:** Fully managed through CloudFormation.
 
 ## Prerequisites
 
@@ -51,8 +35,8 @@ The CloudFormation template requires the following input parameters:
 
 | Parameter Name        | Description                             | Default Value           |
 | --------------------- | --------------------------------------- | ----------------------- |
-| BucketName            | Name of the S3 bucket                   | `bucket19888`           |
-| BackgroundTrackName   | Name of the background music file in S3 | `Chai.mp3`              |
+| BucketName            | Name of the S3 bucket                   | `defaul_tbucket`        |
+| BackgroundTrackName   | Name of the background music file in S3 | `default_track.mp3.mp3` |
 | ScriptFileName        | Name of the Python script file in S3    | `crypto_quote_radio.py` |
 | IcecastSourcePassword | Password for Icecast source connections | `Required`              |
 | IcecastAdminPassword  | Password for Icecast admin interface    | `Required`              |
@@ -80,7 +64,7 @@ The template creates the following AWS resources:
 3. In the CloudFormation console, click **Create Stack** > **With new resources**.
 4. Provide the required parameters as prompted.
 5. Review and launch the stack.
-6. Wait for the stack creation to complete.
+6. Wait 4-5 minutes after the stack creation is complete.
 
 ## Outputs
 
@@ -98,17 +82,6 @@ RadioStreamURL: http://<ElasticIP>:8000/stream
 IcecastAdminURL: http://<ElasticIP>:8000/admin/
 ```
 
-## Customization
-
-- Modify `crypto_quote_radio.py` for custom audio processing.
-- Replace `Chai.mp3` with your preferred background track.
-
-## Troubleshooting
-
-- **Stack Creation Failed:** Ensure your IAM role has sufficient permissions.
-- **No Stream Available:** Check Icecast server logs on the EC2 instance.
-- **Elastic IP Not Accessible:** Verify the security group rules.
-
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for more details.
@@ -119,7 +92,5 @@ Feel free to fork this repository, create feature branches, and submit pull requ
 
 ## Contact
 
-For questions or feedback, contact [[your\_email@example.com](mailto\:your_email@example.com)].
-
-а можно это все в виде кода мне чтобы я просто
+For questions or feedback, contact [[your\_rk5027972@gmail.com](mailto\:your_rk5027972@gmail.com)].
 
